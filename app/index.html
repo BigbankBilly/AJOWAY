@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AJO WAY</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">AJO WAY</p>
+          <h1>Weekly USDC savings circle</h1>
+        </div>
+        <div class="top-actions">
+          <a class="button-link" href="./deploy.html">Deploy circle</a>
+          <button id="connectWallet" class="primary">Connect wallet</button>
+        </div>
+      </section>
+
+      <section class="grid">
+        <aside class="panel status-panel">
+          <div class="stat">
+            <span>Network</span>
+            <strong id="networkName">Not connected</strong>
+          </div>
+          <div class="stat">
+            <span>Wallet</span>
+            <strong id="walletAddress">--</strong>
+          </div>
+          <div class="stat">
+            <span>Round</span>
+            <strong id="roundNumber">--</strong>
+          </div>
+          <div class="stat">
+            <span>Weekly stake</span>
+            <strong id="weeklyStake">--</strong>
+          </div>
+          <div class="stat">
+            <span>Current recipient</span>
+            <strong id="recipient">--</strong>
+          </div>
+          <div class="stat">
+            <span>Paid this round</span>
+            <strong id="paidCount">--</strong>
+          </div>
+        </aside>
+
+        <section class="panel workspace">
+          <label for="contractAddress">Circle contract</label>
+          <div class="input-row">
+            <input id="contractAddress" placeholder="0x..." autocomplete="off" spellcheck="false" />
+            <button id="loadCircle">Load</button>
+          </div>
+
+          <div class="share-row">
+            <button id="copyInvite">Copy invite link</button>
+            <a id="contractExplorer" class="button-link" target="_blank" rel="noreferrer">View contract</a>
+          </div>
+
+          <div class="actions">
+            <button id="switchNetwork">Switch to Arc</button>
+            <button id="approveUsdc">Approve USDC</button>
+            <button id="contribute" class="primary">Contribute</button>
+            <button id="payRound">Pay round</button>
+          </div>
+
+          <div class="members">
+            <div class="section-head">
+              <h2>Members</h2>
+              <span id="memberCount">0</span>
+            </div>
+            <div class="progress-track">
+              <div id="progressFill"></div>
+            </div>
+            <ul id="membersList"></ul>
+          </div>
+        </section>
+      </section>
+
+      <section class="activity">
+        <div class="section-head">
+          <h2>Activity</h2>
+          <button id="clearLog">Clear</button>
+        </div>
+        <ol id="activityLog"></ol>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+    <script src="./main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deploy AJO WAY</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">AJO WAY DEPLOYER</p>
+          <h1>Launch the first circle</h1>
+        </div>
+        <a class="button-link" href="./index.html">Open app</a>
+      </section>
+
+      <section class="grid deploy-grid">
+        <aside class="panel status-panel">
+          <div class="stat">
+            <span>Network</span>
+            <strong id="networkName">Not connected</strong>
+          </div>
+          <div class="stat">
+            <span>Organizer / admin</span>
+            <strong id="walletAddress">--</strong>
+          </div>
+          <div class="stat">
+            <span>Arc gas balance</span>
+            <strong id="gasBalance">--</strong>
+          </div>
+          <div class="stat">
+            <span>Contract package</span>
+            <strong id="artifactStatus">Checking...</strong>
+          </div>
+          <div class="stat">
+            <span>Weekly contribution</span>
+            <strong>2 USDC</strong>
+          </div>
+          <div class="stat">
+            <span>Pot each round</span>
+            <strong>10 USDC</strong>
+          </div>
+        </aside>
+
+        <section class="panel workspace">
+          <div class="section-head">
+            <h2>Circle setup</h2>
+            <span>5</span>
+          </div>
+
+          <div class="deploy-form">
+            <label for="usdcAddress">USDC address</label>
+            <input id="usdcAddress" readonly />
+
+            <label for="weeklyContribution">Weekly contribution</label>
+            <input id="weeklyContribution" readonly />
+
+            <label for="membersListText">Members in payout order</label>
+            <textarea id="membersListText" readonly></textarea>
+          </div>
+
+          <div class="actions deploy-actions">
+            <button id="connectWallet">Connect wallet</button>
+            <button id="switchNetwork">Switch to Arc</button>
+            <button id="deployCircle" class="primary">Deploy circle</button>
+          </div>
+
+          <div class="result-box" id="resultBox" hidden>
+            <p class="eyebrow">Deployment complete</p>
+            <h2 id="deployedAddress">--</h2>
+            <div class="result-links">
+              <a id="arcscanLink" class="button-link" target="_blank" rel="noreferrer">View on ArcScan</a>
+              <a id="continueLink" class="button-link primary-link">Continue to AJO WAY app</a>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="activity">
+        <div class="section-head">
+          <h2>Activity</h2>
+          <button id="clearLog">Clear</button>
+        </div>
+        <ol id="activityLog"></ol>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+    <script src="./ajo-way-artifact.js"></script>
+    <script src="./deploy.js"></script>
+  </body>
+</html>
