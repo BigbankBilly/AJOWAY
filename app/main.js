@@ -46,6 +46,9 @@ const els = {
   weeklyStake: document.querySelector("#weeklyStake"),
   recipient: document.querySelector("#recipient"),
   paidCount: document.querySelector("#paidCount"),
+  heroPot: document.querySelector("#heroPot"),
+  heroRecipient: document.querySelector("#heroRecipient"),
+  heroProgress: document.querySelector("#heroProgress"),
   memberCount: document.querySelector("#memberCount"),
   progressFill: document.querySelector("#progressFill"),
   membersList: document.querySelector("#membersList"),
@@ -189,6 +192,9 @@ async function loadCircle() {
   els.weeklyStake.textContent = `${ethers.formatUnits(stake, 6)} USDC`;
   els.recipient.textContent = shortAddress(nextRecipient);
   els.paidCount.textContent = `${paid.toString()} of ${count.toString()}`;
+  els.heroPot.textContent = `${ethers.formatUnits(stake * count, 6)} USDC`;
+  els.heroRecipient.textContent = shortAddress(nextRecipient);
+  els.heroProgress.textContent = `${paid.toString()} / ${count.toString()} paid`;
   els.memberCount.textContent = count.toString();
   els.progressFill.style.width = `${(Number(paid) / Number(count)) * 100}%`;
   els.contractExplorer.href = `${ARC_EXPLORER}/address/${address}`;

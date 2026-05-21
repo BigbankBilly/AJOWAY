@@ -11,11 +11,27 @@
       <section class="topbar">
         <div>
           <p class="eyebrow">AJO WAY</p>
-          <h1>Weekly USDC savings circle</h1>
+          <h1>Contribute together. Rotate the pot.</h1>
+          <p class="lede">A weekly USDC savings circle on Arc. Five friends pay in, one member receives the full round.</p>
         </div>
         <div class="top-actions">
-          <a class="button-link" href="./deploy.html">Deploy circle</a>
+          <a class="button-link subtle" href="./deploy.html">Deploy circle</a>
           <button id="connectWallet" class="primary">Connect wallet</button>
+        </div>
+      </section>
+
+      <section class="round-hero">
+        <div>
+          <p class="eyebrow">Current pot</p>
+          <strong id="heroPot">--</strong>
+        </div>
+        <div>
+          <p class="eyebrow">Round recipient</p>
+          <strong id="heroRecipient">--</strong>
+        </div>
+        <div>
+          <p class="eyebrow">Round progress</p>
+          <strong id="heroProgress">--</strong>
         </div>
       </section>
 
@@ -48,16 +64,19 @@
         </aside>
 
         <section class="panel workspace">
-          <label for="contractAddress">Circle contract</label>
-          <div class="input-row">
-            <input id="contractAddress" placeholder="0x..." autocomplete="off" spellcheck="false" />
-            <button id="loadCircle">Load</button>
-          </div>
+          <details class="contract-tools">
+            <summary>Circle details</summary>
+            <label for="contractAddress">Circle contract</label>
+            <div class="input-row">
+              <input id="contractAddress" placeholder="0x..." autocomplete="off" spellcheck="false" />
+              <button id="loadCircle">Load</button>
+            </div>
 
-          <div class="share-row">
-            <button id="copyInvite">Copy invite link</button>
-            <a id="contractExplorer" class="button-link" target="_blank" rel="noreferrer">View contract</a>
-          </div>
+            <div class="share-row">
+              <button id="copyInvite">Copy invite link</button>
+              <a id="contractExplorer" class="button-link" target="_blank" rel="noreferrer">View contract</a>
+            </div>
+          </details>
 
           <div class="actions">
             <button id="switchNetwork">Switch to Arc</button>
@@ -77,6 +96,27 @@
             <ul id="membersList"></ul>
           </div>
         </section>
+      </section>
+
+      <section class="next-steps">
+        <div class="section-head">
+          <h2>How to join this round</h2>
+          <span>3</span>
+        </div>
+        <div class="step-grid">
+          <div class="step">
+            <strong>1</strong>
+            <p>Connect the wallet listed in the member table.</p>
+          </div>
+          <div class="step">
+            <strong>2</strong>
+            <p>Approve 2 USDC for this circle contract.</p>
+          </div>
+          <div class="step">
+            <strong>3</strong>
+            <p>Contribute and wait for the round to fill.</p>
+          </div>
+        </div>
       </section>
 
       <section class="activity">
