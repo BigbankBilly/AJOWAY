@@ -4,6 +4,17 @@ const ARC_RPC_URL = "https://rpc.testnet.arc.network";
 const ARC_EXPLORER = "https://testnet.arcscan.app";
 const ARC_USDC = "0x3600000000000000000000000000000000000000";
 const DEFAULT_CIRCLE_ADDRESS = "0xbB52B53087711164d685cC03569b074C79d91498";
+const supabaseConfig = window.AJO_WAY_SUPABASE;
+const supabaseClient = supabaseConfig?.url && supabaseConfig?.anonKey && window.supabase
+  ? window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey)
+  : null;
+const MEMBER_LABELS = {
+  "0x9f8984b32f5dfceac7535c12125eaa4be1c9b9da": "BigbankBilly",
+  "0xce4d235a31e06a746d1e837c92f094baf2028169": "Friend 1",
+  "0x8388220065f9d0a2bdfe91bc6574714ac4c0788c": "Friend 2",
+  "0x49e735587c430b09469653beecc8b8e59e5ec00a": "Friend 3",
+  "0x61ad566440b6925b0f5306e9c150bea70d4fd98d": "Friend 4",
+};
 
 const circleAbi = [
   "error AlreadyContributed()",
@@ -31,6 +42,7 @@ const erc20Abi = [
 
 const els = {
   connectWallet: document.querySelector("#connectWallet"),
+  openLogin: document.querySelector("#openLogin"),
   switchNetwork: document.querySelector("#switchNetwork"),
   approveUsdc: document.querySelector("#approveUsdc"),
   contribute: document.querySelector("#contribute"),
@@ -53,6 +65,18 @@ const els = {
   progressFill: document.querySelector("#progressFill"),
   membersList: document.querySelector("#membersList"),
   activityLog: document.querySelector("#activityLog"),
+  loginDialog: document.querySelector("#loginDialog"),
+  loginName: document.querySelector("#loginName"),
+  loginEmail: document.querySelector("#loginEmail"),
+  saveLogin: document.querySelector("#saveLogin"),
+  waitlistForm: document.querySelector("#waitlistForm"),
+  waitlistName: document.querySelector("#waitlistName"),
+  waitlistEmail: document.querySelector("#waitlistEmail"),
+  waitlistWallet: document.querySelector("#waitlistWallet"),
+  customCircleForm: document.querySelector("#customCircleForm"),
+  customCircleName: document.querySelector("#customCircleName"),
+  customMemberCount: document.querySelector("#customMemberCount"),
+  customContribution: document.querySelector("#customContribution"),
 };
 
 let provider;
@@ -62,10 +86,92 @@ let account;
 let circle;
 let weeklyContribution = 0n;
 let currentCircleAddress = "";
+let currentSession = null;
 
 function shortAddress(address) {
   if (!address || address === "--") return "--";
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function memberLabel(address) {
+  const savedLabels = JSON.parse(localStorage.getItem("ajoWayMemberLabels") || "{}");
+  return savedLabels[address.toLowerCase()] || MEMBER_LABELS[address.toLowerCase()] || "Member";
+}
+
+function saveProfile(name, email) {
+  const profile = { name: name.trim(), email: email.trim() };
+  localStorage.setItem("ajoWayProfile", JSON.stringify(profile));
+  els.openLogin.textContent = profile.name || "Email login";
+  return profile;
+}
+
+function loadProfile() {
+  const profile = JSON.parse(localStorage.getItem("ajoWayProfile") || "null");
+  if (!profile) return;
+
+  els.loginName.value = profile.name || "";
+  els.loginEmail.value = profile.email || "";
+  els.openLogin.textContent = profile.name || "Email login";
+}
+
+async function loadSupabaseSession() {
+  if (!supabaseClient) return;
+
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error) {
+    log("Could not check email login session.");
+    return;
+  }
+
+  currentSession = data.session;
+  if (!currentSession?.user) return;
+
+  const email = currentSession.user.email || "";
+  const { data: profile } = await supabaseClient
+    .from("profiles")
+    .select("name_tag,email,wallet_address")
+    .eq("id", currentSession.user.id)
+    .maybeSingle();
+
+  if (profile?.name_tag) {
+    saveProfile(profile.name_tag, profile.email || email);
+    if (profile.wallet_address) els.waitlistWallet.value = profile.wallet_address;
+    log(`Signed in as ${profile.name_tag}.`);
+    return;
+  }
+
+  if (email) {
+    saveProfile(email.split("@")[0], email);
+    log(`Signed in as ${email}.`);
+  }
+}
+
+function requireSupabase() {
+  if (!supabaseClient) {
+    throw new Error("Supabase is not configured yet.");
+  }
+}
+
+async function requireEmailSession() {
+  requireSupabase();
+  if (!currentSession?.user) {
+    throw new Error("Sign in with email first, then try again.");
+  }
+
+  return currentSession;
+}
+
+async function saveSupabaseProfile(name, email, walletAddress = "") {
+  const session = await requireEmailSession();
+  const { error } = await supabaseClient.from("profiles").upsert({
+    id: session.user.id,
+    email,
+    name_tag: name,
+    wallet_address: walletAddress || null,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) throw error;
 }
 
 function setActionState({ isMember = false, hasPaid = false, isOrganizer = false, roundComplete = false } = {}) {
@@ -216,7 +322,7 @@ async function loadCircle() {
     }
 
     const label = document.createElement("span");
-    label.innerHTML = `<strong>${index + 1}. ${shortAddress(member)}</strong><small>${member}</small>`;
+    label.innerHTML = `<strong>${index + 1}. ${memberLabel(member)}</strong><small>${shortAddress(member)}</small>`;
     item.append(label);
 
     const badges = document.createElement("div");
@@ -247,6 +353,57 @@ async function copyInvite() {
 
   await navigator.clipboard.writeText(invite);
   log("Invite link copied.");
+}
+
+async function saveWaitlistEntry(event) {
+  event.preventDefault();
+  const session = await requireEmailSession();
+  const entry = {
+    user_id: session.user.id,
+    name_tag: els.waitlistName.value.trim(),
+    email: els.waitlistEmail.value.trim() || session.user.email,
+    wallet_address: els.waitlistWallet.value.trim() || null,
+  };
+
+  if (!entry.name_tag || !entry.email) {
+    log("Add your name tag and email to join the waitlist.");
+    return;
+  }
+
+  if (entry.wallet_address && !ethers.isAddress(entry.wallet_address)) {
+    log("That wallet address does not look valid.");
+    return;
+  }
+
+  const { error } = await supabaseClient.from("waitlist").insert(entry);
+  if (error) throw error;
+
+  log(`${entry.name_tag} joined the next-circle waitlist.`);
+  els.waitlistForm.reset();
+}
+
+async function saveCustomCircle(event) {
+  event.preventDefault();
+  const session = await requireEmailSession();
+  const idea = {
+    user_id: session.user.id,
+    circle_name: els.customCircleName.value.trim(),
+    member_count: Number(els.customMemberCount.value),
+    weekly_usdc: Number(els.customContribution.value),
+  };
+
+  if (!idea.circle_name || idea.member_count < 2 || idea.weekly_usdc < 1) {
+    log("Add a circle name, at least 2 members, and a weekly amount.");
+    return;
+  }
+
+  const { error } = await supabaseClient.from("circle_requests").insert(idea);
+  if (error) throw error;
+
+  log(`${idea.circle_name} sent for review.`);
+  els.customCircleForm.reset();
+  els.customMemberCount.value = 5;
+  els.customContribution.value = 2;
 }
 
 async function approveUsdc() {
@@ -318,6 +475,39 @@ async function run(action) {
 }
 
 els.connectWallet.addEventListener("click", () => run(connectWallet));
+els.openLogin.addEventListener("click", () => els.loginDialog.showModal());
+els.saveLogin.addEventListener("click", (event) => {
+  event.preventDefault();
+  run(async () => {
+    requireSupabase();
+    const name = els.loginName.value.trim();
+    const email = els.loginEmail.value.trim();
+
+    if (!name || !email) {
+      log("Add your name tag and email to continue.");
+      return;
+    }
+
+    if (window.location.protocol === "file:") {
+      log("Email login needs the hosted site or local server, not a file link.");
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.href,
+        data: { name_tag: name },
+      },
+    });
+    if (error) throw error;
+
+    saveProfile(name, email);
+    localStorage.setItem("ajoWayPendingProfile", JSON.stringify({ name, email }));
+    log(`Check ${email} for your AJO WAY login link.`);
+    els.loginDialog.close();
+  });
+});
 els.switchNetwork.addEventListener("click", () => run(switchToArc));
 els.loadCircle.addEventListener("click", () => run(loadCircle));
 els.copyInvite.addEventListener("click", () => run(copyInvite));
@@ -327,6 +517,8 @@ els.payRound.addEventListener("click", () => run(payRound));
 els.clearLog.addEventListener("click", () => {
   els.activityLog.innerHTML = "";
 });
+els.waitlistForm.addEventListener("submit", saveWaitlistEntry);
+els.customCircleForm.addEventListener("submit", saveCustomCircle);
 
 if (window.ethereum) {
   window.ethereum.on("chainChanged", () => window.location.reload());
@@ -334,6 +526,14 @@ if (window.ethereum) {
 }
 
 setActionState();
+loadProfile();
+loadSupabaseSession().then(async () => {
+  const pending = JSON.parse(localStorage.getItem("ajoWayPendingProfile") || "null");
+  if (pending && currentSession?.user) {
+    await saveSupabaseProfile(pending.name, pending.email);
+    localStorage.removeItem("ajoWayPendingProfile");
+  }
+});
 if (loadContractFromUrl()) {
   run(loadCircle);
 }
